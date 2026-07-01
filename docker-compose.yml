@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sellmoreofyour
+      POSTGRES_USER: sellmoreofyour
+      POSTGRES_PASSWORD: sellmoreofyour
+    volumes:
+      - sellmoreofyour_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sellmoreofyour -d sellmoreofyour"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    image: sellmoreofyour-backend-dev
+    build:
+      context: ./backend
+      target: dev
+    ports:
+      - "4000:4000"
+    env_file:
+      - path: .env
+        required: false
+      - path: backend/.env
+        required: false
+    environment:
+      DATABASE_URL: postgres://sellmoreofyour:sellmoreofyour@postgres:5432/sellmoreofyour
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  frontend:
+    image: sellmoreofyour-frontend-dev
+    build:
+      context: ./frontend
+      target: dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: frontend/.env
+        required: false
+    environment:
+      VITE_API_URL: http://localhost:4000
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  admin-seed:
+    image: sellmoreofyour-backend-dev
+    env_file:
+      - path: .env
+        required: false
+      - path: backend/.env
+        required: false
+    environment:
+      DATABASE_URL: postgres://sellmoreofyour:sellmoreofyour@postgres:5432/sellmoreofyour
+      LOCAL_SUPERADMIN_EMAIL: ${LOCAL_SUPERADMIN_EMAIL:-admin@sellmoreofyour.local}
+      LOCAL_SUPERADMIN_PASSWORD: ${LOCAL_SUPERADMIN_PASSWORD:-MySecretPassword123!}
+    command: npm run create-superadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  sellmoreofyour_postgres_data:

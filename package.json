@@ -1,0 +1,9 @@
+{
+  "name": "sellmoreofyour",
+  "private": true,
+  "scripts": {
+    "docker:rebuild": "DOCKER_BUILDKIT=0 docker build -t sellmoreofyour-backend-dev --target dev ./backend && DOCKER_BUILDKIT=0 docker build -t sellmoreofyour-frontend-dev --target dev ./frontend && docker compose up -d --no-build",
+    "generate-secrets": "npm --prefix backend run generate-secrets",
+    "setup:prod-env": "node scripts/setup-prod-env.mjs"
+  }
+}
