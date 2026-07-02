@@ -257,3 +257,36 @@ h1, h2, h3, p, li { overflow-wrap: anywhere; }
   .newsletter-input-row button { width: 100%; }
   .admin-list article, .settings-row, .time-grid, .weekday-grid { grid-template-columns: 1fr; }
 }
+
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 22px 0;
+}
+
+.share-bar span {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.share-bar a {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.share-bar a:hover {
+  transform: translateY(-1px);
+}
