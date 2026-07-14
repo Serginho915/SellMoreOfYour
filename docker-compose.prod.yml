@@ -38,11 +38,17 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
+      GENERATION_TIMEZONE: ${GENERATION_TIMEZONE:-Europe/Sofia}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
   frontend:
     image: sellmoreofyour-frontend-prod
@@ -58,7 +64,25 @@ services:
       NODE_ENV: production
       VITE_API_URL: ${VITE_API_URL}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+
+  admin-seed:
+    image: sellmoreofyour-backend-prod
+    env_file:
+      - path: backend/.env.production
+        required: false
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      LOCAL_SUPERADMIN_EMAIL: ${LOCAL_SUPERADMIN_EMAIL}
+      SUPERADMIN_PASSWORD: ${LOCAL_SUPERADMIN_PASSWORD}
+    command: ["sh", "-c", "npm run create-superadmin -- \"$LOCAL_SUPERADMIN_EMAIL\""]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: "no"
 
 volumes:
   sellmoreofyour_prod_postgres_data:
