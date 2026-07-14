@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 
-const file = '.env.production';
+const file = '.env';
 if (fs.existsSync(file)) {
   console.log(`${file} already exists; leaving it unchanged.`);
 } else {
